@@ -6,7 +6,10 @@
 
 
 # TODO:
-#   - implement labels
+#   - implement labels and constants
+#   - implement immediates
+#   - implement all other instructions
+#   - restructure to be cleaner
 
 import sys
 
