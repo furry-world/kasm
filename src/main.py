@@ -10,6 +10,7 @@
 #   - implement immediates
 #   - implement all other instructions
 #   - restructure to be cleaner
+#   - maybe implement preprocessor commands (like MADS)
 
 import sys
 
