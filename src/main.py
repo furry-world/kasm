@@ -6,10 +6,10 @@
 
 
 # TODO:
-#   - implement labels and constants
-#   - implement immediates
+#   - fix labels not being able to be defined after reference
 #   - implement all other instructions
 #   - restructure to be cleaner
+#   - implement org, data
 #   - maybe implement preprocessor commands (like MADS)
 
 import sys
