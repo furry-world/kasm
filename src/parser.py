@@ -120,9 +120,8 @@ def parse(fileNameIn):
             case 'CALL':
                 bytesToAdd.append(0o00)
 
-                address = decodeValue(tokens[1])
                 try:
-                    print('fuck')
+                    address = decodeValue(tokens[1])
                 except:
                     abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
                 
@@ -153,6 +152,7 @@ def parse(fileNameIn):
 
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)
+
         rom += bytesToAdd
     
     return rom
