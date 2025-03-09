@@ -117,7 +117,7 @@ def instruction_regivalue(opcode, tokens):
         abortError(lineCounter, strings.EXPECTED_REGISTER_NUMBER_OR_VALUE)
     hytes += numberToHytes(value, 8)
     hytes[1] |= reg << 3
-    if immediate: hytes[1] |= 0b000100
+    if not immediate: hytes[1] |= 0b000100
     return hytes
 
 def instruction_hybrid(opcodereg, opcodeval, tokens):
