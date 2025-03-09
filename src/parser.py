@@ -3,6 +3,9 @@ import strings
 # this is to handle labels across methods
 labels = {}
 
+# HAAAAAAAAAAAAAAACK, needs cleaning up
+lineCounter = 0
+
 def abortError(line, message):
     print(strings.ERROR_ON_LINE + f' {line}: {message}')
     print(strings.COMPILATION_ABORTED)
@@ -10,6 +13,12 @@ def abortError(line, message):
 
 def printdbg(message):
     print(f'DEBUG: {message}')
+
+def registerNameToID(name):
+    regid = ord(name)
+    if regid >= ord('A') and regid <= ord('H'):
+        return regid - ord('A')
+    raise Exception('invalid register name')
 
 def numberToHytes(value, bits):
     numFullHytes = bits // 6
@@ -46,14 +55,100 @@ def decodeNumber(token):
 
 def decodeValue(token):
     global labels
-    if token[0] == "#":
-        return int(token[1:])
     if token in labels:
         return decodeValue(str(labels[token]))
     return decodeNumber(token)
 
+
+# opcode signature handlers
+def instruction_1hyte(opcode, tokens):
+    hytes = []
+    hytes.append(opcode)
+    try:
+        value = decodeValue(tokens[1])
+    except:
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+    hytes += numberToHytes(value, 6)
+    return hytes
+
+def instruction_2hyte(opcode, tokens):
+    hytes = []
+    hytes.append(opcode)
+    try:
+        value = decodeValue(tokens[1])
+    except:
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+    hytes += numberToHytes(value, 12)
+    return hytes
+
+def instruction_register(opcode, tokens):
+    hytes = []
+    hytes.append(opcode)
+    try:
+        reg = registerNameToID(tokens[1])
+    except:
+        abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
+    hytes.append(reg << 3)
+    return hytes
+
+def instruction_2registers(opcode, tokens):
+    hytes = []
+    hytes.append(opcode)
+    try:
+        regx = registerNameToID(tokens[1])
+        regy = registerNameToID(tokens[2])
+    except:
+        abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
+    hytes.append(regx << 3 | regy)
+    return hytes
+
+def instruction_regivalue(opcode, tokens):
+    hytes = []
+    hytes.append(opcode)
+    try:
+        reg = registerNameToID(tokens[1])
+        if tokens[2][0] == '#':
+            immediate = True
+            value = decodeValue(tokens[2][1:])
+        else:
+            immediate = False
+            value = decodeValue(tokens[2])
+    except:
+        abortError(lineCounter, strings.EXPECTED_REGISTER_NUMBER_OR_VALUE)
+    hytes += numberToHytes(value, 8)
+    hytes[1] |= reg << 3
+    if immediate: hytes[1] |= 0b000100
+    return hytes
+
+def instruction_hybrid(opcodereg, opcodeval, tokens):
+    tworeg = False
+    try:
+        registerNameToID(tokens[2])
+        tworeg = True
+    except:
+        pass
+
+    if tworeg: return instruction_2registers(opcodereg, tokens)
+    else: return instruction_regivalue(opcodeval, tokens)
+
+def instruction_reg2hyte(opcode, tokens):
+    hytes = []
+    hytes.append(opcode << 3)
+    try:
+        reg = registerNameToID(tokens[1])
+    except:
+        abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
+    hytes[0] |= reg
+    try:
+        value = decodeValue(tokens[2])
+    except:
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+    hytes += numberToHytes(value, 12)
+    return hytes
+
+# actual parsing
 def parse(fileNameIn):
-    global labels
+    global labels, lineCounter
     rom = []
     labels = {}
     with open(fileNameIn, 'r') as file:
@@ -118,37 +213,55 @@ def parse(fileNameIn):
         printdbg(instruction)
         match instruction:
             case 'CALL':
-                bytesToAdd.append(0o00)
-
-                try:
-                    address = decodeValue(tokens[1])
-                except:
-                    abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
-                
-                bytesToAdd += numberToHytes(address, 12)
+                bytesToAdd += instruction_2hyte(0o00, tokens)
             
             case 'JUMP':
-                bytesToAdd.append(0o01)
-
-                try:
-                    address = decodeValue(tokens[1])
-                except:
-                    abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
-                
-                bytesToAdd += numberToHytes(address, 12)
+                bytesToAdd += instruction_2hyte(0o01, tokens)
             
             case 'RJUMP':
-                bytesToAdd.append(0o02)
-
-                try:
-                    offset = decodeValue(tokens[1])
-                except:
-                    abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
-                
-                bytesToAdd += numberToHytes(offset, 6)
+                bytesToAdd += instruction_1hyte(0o02, tokens)
             
             case 'RETURN':
                 bytesToAdd.append(0o03)
+
+            case 'ADD':
+                bytesToAdd += instruction_2registers(0o13, tokens)
+
+            case 'SUBTRACT':
+                bytesToAdd += instruction_2registers(0o14, tokens)
+
+            case 'OR':
+                bytesToAdd += instruction_2registers(0o15, tokens)
+
+            case 'AND':
+                bytesToAdd += instruction_2registers(0o16, tokens)
+
+            case 'XOR':
+                bytesToAdd += instruction_2registers(0o17, tokens)
+
+            case 'SHIFTL':
+                bytesToAdd += instruction_register(0o20, tokens)
+
+            case 'SHIFTR':
+                bytesToAdd += instruction_register(0o21, tokens)
+
+            case 'LOAD':
+                bytesToAdd += instruction_hybrid(0o12, 0o06, tokens)
+
+            case 'STORE':
+                bytesToAdd += instruction_regivalue(0o07, tokens)
+
+            case 'EQUAL':
+                bytesToAdd += instruction_hybrid(0o10, 0o04, tokens)
+
+            case 'NOTEQUAL':
+                bytesToAdd += instruction_hybrid(0o11, 0o05, tokens)
+
+            case 'PLOAD':
+                bytesToAdd += instruction_reg2hyte(0o4, tokens)
+
+            case 'PSTORE':
+                bytesToAdd += instruction_reg2hyte(0o5, tokens)
 
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)

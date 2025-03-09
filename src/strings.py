@@ -11,5 +11,7 @@ LABEL_NAME_MUST_BE_ALPHANUMERIC = 'label name must be alphanumeric and cannot co
 DUPLICATE_DEFINITION_OF_LABEL = 'duplicate definition of label'
 
 EXPECTED_NUMBER_OR_LABEL = 'expected a number or label'
+EXPECTED_VALID_REGISTER = 'expected a valid register name'
+EXPECTED_REGISTER_NUMBER_OR_VALUE = 'expected a valid register, number or label'
 
 UNKNOWN_INSTRUCTION = 'unknown instruction'
