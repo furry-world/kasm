@@ -107,6 +107,9 @@ def instruction_regivalue(opcode, tokens):
     hytes.append(opcode)
     try:
         reg = registerNameToID(tokens[1])
+    except:
+        abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
+    try:
         if tokens[2][0] == '#':
             immediate = True
             value = decodeValue(tokens[2][1:])
@@ -114,7 +117,7 @@ def instruction_regivalue(opcode, tokens):
             immediate = False
             value = decodeValue(tokens[2])
     except:
-        abortError(lineCounter, strings.EXPECTED_REGISTER_NUMBER_OR_VALUE)
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
     hytes += numberToHytes(value, 8)
     hytes[1] |= reg << 3
     if not immediate: hytes[1] |= 0b000100
@@ -250,6 +253,12 @@ def parse(fileNameIn):
 
             case 'STORE':
                 bytesToAdd += instruction_regivalue(0o07, tokens)
+            
+            case 'ILOAD':
+                bytesToAdd += instruction_regivalue(0o22, tokens)
+
+            case 'ISTORE':
+                bytesToAdd += instruction_regivalue(0o23, tokens)
 
             case 'EQUAL':
                 bytesToAdd += instruction_hybrid(0o10, 0o04, tokens)
@@ -262,6 +271,12 @@ def parse(fileNameIn):
 
             case 'PSTORE':
                 bytesToAdd += instruction_reg2hyte(0o5, tokens)
+
+            case 'IPLOAD':
+                bytesToAdd += instruction_reg2hyte(0o6, tokens)
+
+            case 'IPSTORE':
+                bytesToAdd += instruction_reg2hyte(0o7, tokens)
 
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)
