@@ -1,10 +1,18 @@
 import strings
 
+class FutureLabel:
+    line = -1
+    romOffset = -1
+    labelName = ''
+    valueSize = -1
+
 # this is to handle labels across methods
 labels = {}
+futureLabels = []
 
 # HAAAAAAAAAAAAAAACK, needs cleaning up
 lineCounter = 0
+rom = []
 
 def abortError(line, message):
     print(strings.ERROR_ON_LINE + f' {line}: {message}')
@@ -58,26 +66,54 @@ def decodeValue(token):
     if token in labels:
         return decodeValue(str(labels[token]))
     return decodeNumber(token)
+        
+
+def registerFutureLabel(labelName, romOffset, valueSize):
+    global futureLabels
+
+    futureLabel = FutureLabel()
+    futureLabel.line = lineCounter
+    futureLabel.romOffset = romOffset
+    futureLabel.labelName = labelName
+    futureLabel.valueSize = valueSize
+    futureLabels.append(futureLabel)
+    return 0        # will be masked later, return 0 for now
+
+def populateFutureLabels():
+    global labels, futureLabels, rom
+    for futureLabel in futureLabels:
+        try:
+            value = numberToHytes(decodeValue(futureLabel.labelName), futureLabel.valueSize)
+        except:
+            abortError(futureLabel.line, strings.EXPECTED_NUMBER_OR_LABEL)
+        for i in range(len(value)):
+            rom[futureLabel.romOffset + i] |= value[i]
 
 
 # opcode signature handlers
 def instruction_1hyte(opcode, tokens):
+    global rom
     hytes = []
     hytes.append(opcode)
     try:
         value = decodeValue(tokens[1])
     except:
-        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        registerFutureLabel(tokens[1], len(rom) + 1, 6)
+        value = 0
     hytes += numberToHytes(value, 6)
     return hytes
 
 def instruction_2hyte(opcode, tokens):
+    global rom
     hytes = []
     hytes.append(opcode)
     try:
         value = decodeValue(tokens[1])
     except:
-        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        registerFutureLabel(tokens[1], len(rom) + 1, 12)
+        value = 0
     hytes += numberToHytes(value, 12)
     return hytes
 
@@ -117,7 +153,17 @@ def instruction_regivalue(opcode, tokens):
             immediate = False
             value = decodeValue(tokens[2])
     except:
-        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        try:
+            if tokens[2][0] == '#':
+                immediate = True
+                registerFutureLabel(tokens[2][1:], len(rom) + 1, 8)
+            else:
+                immediate = False
+                registerFutureLabel(tokens[2], len(rom) + 1, 8)
+            value = 0
+        except:
+            abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
     hytes += numberToHytes(value, 8)
     hytes[1] |= reg << 3
     if not immediate: hytes[1] |= 0b000100
@@ -145,30 +191,26 @@ def instruction_reg2hyte(opcode, tokens):
     try:
         value = decodeValue(tokens[2])
     except:
-        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+        registerFutureLabel(tokens[2], len(rom) + 1, 12)
+        value = 0
     hytes += numberToHytes(value, 12)
     return hytes
 
 # actual parsing
 def parse(fileNameIn):
-    global labels, lineCounter
-    rom = []
-    labels = {}
+    global labels, lineCounter, rom
     with open(fileNameIn, 'r') as file:
         sourceFile = file.readlines()
 
     lineCounter = 0
     for line in sourceFile:
         lineCounter += 1
-        printdbg(lineCounter)
         tokens = line.strip().split(' ')
         bytesToAdd = []
-        printdbg(line)
-        printdbg(tokens)
 
         # filter empty tokens
         tokens[:] = [x for x in tokens if x]
-        printdbg(tokens)
 
         # handle comments
         tokensToKeep = len(tokens)
@@ -182,6 +224,8 @@ def parse(fileNameIn):
 
         # handle empty lines
         if len(tokens) == 0: continue
+
+        printdbg(tokens)
 
         # handle labels
         if tokens[0][-1] == ':' or (len(tokens) == 3 and tokens[1] == '='):
@@ -213,7 +257,6 @@ def parse(fileNameIn):
 
         # now, actual instructions.
         instruction = tokens[0].upper()
-        printdbg(instruction)
         match instruction:
             case 'CALL':
                 bytesToAdd += instruction_2hyte(0o00, tokens)
@@ -283,6 +326,7 @@ def parse(fileNameIn):
 
         rom += bytesToAdd
     
+    populateFutureLabels()
     return rom
 
     

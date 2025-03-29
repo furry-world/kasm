@@ -10,6 +10,7 @@
 #   - restructure to be cleaner
 #   - implement org, data
 #   - maybe implement preprocessor commands (like MADS)
+#   - strings
 
 import sys
 
@@ -46,7 +47,12 @@ for arg in arguments:
 
 rom = parser.parse(fileNameIn)
 
-print(rom)
+# DEBUG
+for i in rom:
+    print(oct(i)[2:], end=' ')
+print()
+for i in rom:
+    print(bin(i)[2:], end=' ')
 
 with open(fileNameOut, 'wb') as file:
     for hyte in rom:
