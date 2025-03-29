@@ -1,4 +1,6 @@
 import strings
+import constants
+
 
 class FutureLabel:
     line = -1
@@ -12,7 +14,8 @@ futureLabels = []
 
 # HAAAAAAAAAAAAAAACK, needs cleaning up
 lineCounter = 0
-rom = []
+rom = [constants.FILL_VALUE for x in range(constants.ROM_SIZE)]
+romOffset = 0
 
 def abortError(line, message):
     print(strings.ERROR_ON_LINE + f' {line}: {message}')
@@ -197,9 +200,25 @@ def instruction_reg2hyte(opcode, tokens):
     hytes += numberToHytes(value, 12)
     return hytes
 
+# directive handlers
+def directive_1value(tokens):
+    try:
+        return decodeValue(tokens[1])
+    except:
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+
+def directive_listofvalues(tokens):
+    values = []
+    try:
+        for i in tokens[1:]:
+            values.append(decodeValue(i))
+    except:
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+    return values
+
 # actual parsing
 def parse(fileNameIn):
-    global labels, lineCounter, rom
+    global labels, lineCounter, rom, romOffset
     with open(fileNameIn, 'r') as file:
         sourceFile = file.readlines()
 
@@ -224,9 +243,7 @@ def parse(fileNameIn):
 
         # handle empty lines
         if len(tokens) == 0: continue
-
-        printdbg(tokens)
-
+        
         # handle labels
         if tokens[0][-1] == ':' or (len(tokens) == 3 and tokens[1] == '='):
             if tokens[0][-1] == ':':
@@ -321,10 +338,21 @@ def parse(fileNameIn):
             case 'IPSTORE':
                 bytesToAdd += instruction_reg2hyte(0o7, tokens)
 
+            # compiler directives
+            case 'ORIGIN':
+                romOffset = directive_1value(tokens)
+            
+            case 'DATA':
+                bytesToAdd = directive_listofvalues(tokens)
+
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)
 
-        rom += bytesToAdd
+        for i in range(len(bytesToAdd)):
+            rom[romOffset] = bytesToAdd[i]
+            romOffset += 1
+            if romOffset >= constants.ROM_SIZE:
+                abortError(lineCounter, strings.OUT_OF_SPACE)
     
     populateFutureLabels()
     return rom

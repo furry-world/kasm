@@ -15,3 +15,4 @@ EXPECTED_VALID_REGISTER = 'expected a valid register name'
 EXPECTED_REGISTER_NUMBER_OR_VALUE = 'expected a valid register, number or label'
 
 UNKNOWN_INSTRUCTION = 'unknown instruction'
+OUT_OF_SPACE = 'ran out of ROM space'

@@ -6,9 +6,7 @@
 
 
 # TODO:
-#   - fix labels not being able to be defined after reference
 #   - restructure to be cleaner
-#   - implement org, data
 #   - maybe implement preprocessor commands (like MADS)
 #   - strings
 
@@ -48,11 +46,10 @@ for arg in arguments:
 rom = parser.parse(fileNameIn)
 
 # DEBUG
-for i in rom:
-    print(oct(i)[2:], end=' ')
-print()
-for i in rom:
-    print(bin(i)[2:], end=' ')
+# for i in rom:
+#     print(oct(i)[2:], end=' ')
+# print()
+
 
 with open(fileNameOut, 'wb') as file:
     for hyte in rom:
