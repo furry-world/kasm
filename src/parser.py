@@ -94,8 +94,6 @@ def registerFutureLabel(labelName, romOffset, valueSize):
 def populateFutureLabels():
     global labels, futureLabels, rom
     for futureLabel in futureLabels:
-        printdbg(futureLabel.labelName)
-        printdbg(futureLabel.romOffset)
         try:
             value = numberToHytes(decodeValue(futureLabel.labelName), futureLabel.valueSize)
         except:
