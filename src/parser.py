@@ -1,6 +1,8 @@
+import sys
+
 import strings
 import constants
-
+import wavescii
 
 class FutureLabel:
     line = -1
@@ -20,7 +22,7 @@ romOffset = 0
 def abortError(line, message):
     print(strings.ERROR_ON_LINE + f' {line}: {message}')
     print(strings.COMPILATION_ABORTED)
-    exit(1)
+    sys.exit(1)
 
 def printdbg(message):
     print(f'DEBUG: {message}')
@@ -69,7 +71,14 @@ def decodeValue(token):
     if token in labels:
         return decodeValue(str(labels[token]))
     return decodeNumber(token)
-        
+
+def wavesciify(string):
+    hytes = []
+    for char in string:
+        hytes.append(wavescii.definitions[char])
+    hytes.append(0)     # terminate string
+    return hytes
+
 
 def registerFutureLabel(labelName, romOffset, valueSize):
     global futureLabels
@@ -216,6 +225,34 @@ def directive_listofvalues(tokens):
         abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
     return values
 
+def directive_string(line):
+    string = ''
+    startIndex = line.find('"') + 1
+    if startIndex == 0: abortError(lineCounter, strings.EXPECTED_STRING)
+    
+    terminated = False
+    endIndex = len(line)
+    currentPos = startIndex
+    while currentPos < endIndex:
+        if line[currentPos] == '\\':
+            currentPos += 1
+            match line[currentPos]:
+                case '\\':
+                    string += '\\'
+                case '0':
+                    string += '\0'
+                case 'n':
+                    string += '\n'
+                case '"':
+                    string += '"'
+        elif line[currentPos] == '"':
+            terminated = True
+            break
+        else: string += line[currentPos]
+        currentPos += 1
+    if not terminated: abortError(lineCounter, strings.STRING_NOT_TERMINATED)
+    return string
+
 # actual parsing
 def parse(fileNameIn):
     global labels, lineCounter, rom, romOffset
@@ -243,7 +280,7 @@ def parse(fileNameIn):
 
         # handle empty lines
         if len(tokens) == 0: continue
-        
+
         # handle labels
         if tokens[0][-1] == ':' or (len(tokens) == 3 and tokens[1] == '='):
             if tokens[0][-1] == ':':
@@ -344,6 +381,12 @@ def parse(fileNameIn):
             
             case 'DATA':
                 bytesToAdd = directive_listofvalues(tokens)
+
+            case 'STRING':
+                try:
+                    bytesToAdd = wavesciify(directive_string(line).upper())
+                except:
+                    abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
 
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)

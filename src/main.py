@@ -8,7 +8,7 @@
 # TODO:
 #   - restructure to be cleaner
 #   - maybe implement preprocessor commands (like MADS)
-#   - strings
+#   - include
 
 import sys
 
