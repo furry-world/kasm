@@ -110,7 +110,6 @@ def instruction_1hyte(opcode, tokens):
     try:
         value = decodeValue(tokens[1])
     except:
-        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
         registerFutureLabel(tokens[1], len(rom) + 1, 6)
         value = 0
     hytes += numberToHytes(value, 6)
@@ -123,7 +122,6 @@ def instruction_2hyte(opcode, tokens):
     try:
         value = decodeValue(tokens[1])
     except:
-        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
         registerFutureLabel(tokens[1], len(rom) + 1, 12)
         value = 0
     hytes += numberToHytes(value, 12)
@@ -165,7 +163,6 @@ def instruction_regivalue(opcode, tokens):
             immediate = False
             value = decodeValue(tokens[2])
     except:
-        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
         try:
             if tokens[2][0] == '#':
                 immediate = True
@@ -203,7 +200,6 @@ def instruction_reg2hyte(opcode, tokens):
     try:
         value = decodeValue(tokens[2])
     except:
-        #abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
         registerFutureLabel(tokens[2], len(rom) + 1, 12)
         value = 0
     hytes += numberToHytes(value, 12)
@@ -256,10 +252,12 @@ def directive_string(line):
 # actual parsing
 def parse(fileNameIn):
     global labels, lineCounter, rom, romOffset
-    with open(fileNameIn, 'r') as file:
-        sourceFile = file.readlines()
+    try:
+        with open(fileNameIn, 'r') as file:
+            sourceFile = file.readlines()
+    except:
+        abortError(lineCounter, strings.FILE_NOT_FOUND)
 
-    lineCounter = 0
     for line in sourceFile:
         lineCounter += 1
         tokens = line.strip().split(' ')
@@ -387,6 +385,13 @@ def parse(fileNameIn):
                     bytesToAdd = wavesciify(directive_string(line).upper())
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
+
+            case 'INCLUDE':
+                try:
+                    parse(directive_string(line))
+                except:
+                    abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
+
 
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)

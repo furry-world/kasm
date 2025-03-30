@@ -1,6 +1,6 @@
 #!/bin/python
 
-# KASM (K6 Assembler)
+# kasm (K6 Assembler)
 # Part of furry-world project
 # Written by qRea, 2025
 
@@ -8,7 +8,6 @@
 # TODO:
 #   - restructure to be cleaner
 #   - maybe implement preprocessor commands (like MADS)
-#   - include
 
 import sys
 

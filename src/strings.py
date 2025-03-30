@@ -19,3 +19,4 @@ STRING_CONTAINS_ILLEGAL_CHARS = 'string contains illegal characters'
 
 UNKNOWN_INSTRUCTION = 'unknown instruction'
 OUT_OF_SPACE = 'ran out of ROM space'
+FILE_NOT_FOUND = 'file not found'
