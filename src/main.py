@@ -8,46 +8,46 @@
 # TODO:
 #   - restructure to be cleaner
 #   - maybe implement preprocessor commands (like MADS)
+#   - DOCS!!!
 
 import sys
+import os.path
 
 import parser
 
 def printUsage():
-    # TODO: update
-    parameters = [
-        ("-i=<path>", "Set input file"),
-        ("-o=<path>", "Set output file")
-    ]
-
-    print("Parameters:")
-    for i in parameters:
-        print(i[0], "\t", i[1])
+    print('kasm v0.3 (alpha)')
+    print(f'usage: {sys.argv[0]} <INPUT FILE> [SWITCHES]')
+    print()
+    print('valid switches:')
+    print('   -h          print help')
+    print('   -o=<FILE>   specify output file name')
 
 
-romSize = 0
-
-fileNameIn = ""
-fileNameOut = "out.gnw"
+fileNameIn = ''
+fileNameOut = ''
 arguments = sys.argv[1:]
 for arg in arguments:
     
-    if arg.startswith("-i="):
-        fileNameIn = arg[3:]
-        break
+    if arg.startswith('-h'):
+        printUsage()
+        sys.exit()
 
-    if arg.startswith("-o="):
+    if arg.startswith('-o='):
         fileNameOut = arg[3:]
         break
     
     fileNameIn = arg
 
-rom = parser.parse(fileNameIn)
+if fileNameIn == '':
+    printUsage()
+    sys.exit()
 
-# DEBUG
-# for i in rom:
-#     print(oct(i)[2:], end=' ')
-# print()
+if fileNameOut == '':
+    fileNameOut = os.path.basename(fileNameIn).split('.')[0] + '.gnw'
+
+
+rom = parser.parse(fileNameIn)
 
 
 with open(fileNameOut, 'wb') as file:
