@@ -94,35 +94,39 @@ def registerFutureLabel(labelName, romOffset, valueSize):
 def populateFutureLabels():
     global labels, futureLabels, rom
     for futureLabel in futureLabels:
+        printdbg(futureLabel.labelName)
+        printdbg(futureLabel.romOffset)
         try:
             value = numberToHytes(decodeValue(futureLabel.labelName), futureLabel.valueSize)
         except:
             abortError(futureLabel.line, strings.EXPECTED_NUMBER_OR_LABEL)
         for i in range(len(value)):
+            if futureLabel.romOffset + i >= constants.ROM_SIZE:
+                abortError(lineCounter, strings.OUT_OF_SPACE)
             rom[futureLabel.romOffset + i] |= value[i]
 
 
 # opcode signature handlers
 def instruction_1hyte(opcode, tokens):
-    global rom
+    global romOffset
     hytes = []
     hytes.append(opcode)
     try:
         value = decodeValue(tokens[1])
     except:
-        registerFutureLabel(tokens[1], len(rom) + 1, 6)
+        registerFutureLabel(tokens[1], romOffset + 1, 6)
         value = 0
     hytes += numberToHytes(value, 6)
     return hytes
 
 def instruction_2hyte(opcode, tokens):
-    global rom
+    global romOffset
     hytes = []
     hytes.append(opcode)
     try:
         value = decodeValue(tokens[1])
     except:
-        registerFutureLabel(tokens[1], len(rom) + 1, 12)
+        registerFutureLabel(tokens[1], romOffset + 1, 12)
         value = 0
     hytes += numberToHytes(value, 12)
     return hytes
@@ -149,6 +153,7 @@ def instruction_2registers(opcode, tokens):
     return hytes
 
 def instruction_regivalue(opcode, tokens):
+    global romOffset
     hytes = []
     hytes.append(opcode)
     try:
@@ -166,10 +171,10 @@ def instruction_regivalue(opcode, tokens):
         try:
             if tokens[2][0] == '#':
                 immediate = True
-                registerFutureLabel(tokens[2][1:], len(rom) + 1, 8)
+                registerFutureLabel(tokens[2][1:], romOffset + 1, 8)
             else:
                 immediate = False
-                registerFutureLabel(tokens[2], len(rom) + 1, 8)
+                registerFutureLabel(tokens[2], romOffset + 1, 8)
             value = 0
         except:
             abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
@@ -190,6 +195,7 @@ def instruction_hybrid(opcodereg, opcodeval, tokens):
     else: return instruction_regivalue(opcodeval, tokens)
 
 def instruction_reg2hyte(opcode, tokens):
+    global romOffset
     hytes = []
     hytes.append(opcode << 3)
     try:
@@ -200,7 +206,7 @@ def instruction_reg2hyte(opcode, tokens):
     try:
         value = decodeValue(tokens[2])
     except:
-        registerFutureLabel(tokens[2], len(rom) + 1, 12)
+        registerFutureLabel(tokens[2], romOffset + 1, 12)
         value = 0
     hytes += numberToHytes(value, 12)
     return hytes
@@ -284,7 +290,7 @@ def parse(fileNameIn):
             if tokens[0][-1] == ':':
                 expectedTokens = 1
                 labelName = tokens[0][:-1]
-                labelValue = len(rom)
+                labelValue = romOffset
             elif tokens[1] == '=':
                 expectedTokens = 3
                 labelName = tokens[0]
