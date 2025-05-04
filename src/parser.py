@@ -4,11 +4,13 @@ import strings
 import constants
 import wavescii
 
+
 class FutureLabel:
     line = -1
     romOffset = -1
-    labelName = ''
+    labelName = ""
     valueSize = -1
+
 
 # this is to handle labels across methods
 labels = {}
@@ -19,19 +21,23 @@ lineCounter = 0
 rom = [constants.FILL_VALUE for x in range(constants.ROM_SIZE)]
 romOffset = 0
 
+
 def abortError(line, message):
-    print(strings.ERROR_ON_LINE + f' {line}: {message}')
+    print(strings.ERROR_ON_LINE + f" {line}: {message}")
     print(strings.COMPILATION_ABORTED)
     sys.exit(1)
 
+
 def printdbg(message):
-    print(f'DEBUG: {message}')
+    print(f"DEBUG: {message}")
+
 
 def registerNameToID(name):
     regid = ord(name)
-    if regid >= ord('A') and regid <= ord('H'):
-        return regid - ord('A')
-    raise Exception('invalid register name')
+    if regid >= ord("A") and regid <= ord("H"):
+        return regid - ord("A")
+    raise Exception("invalid register name")
+
 
 def numberToHytes(value, bits):
     numFullHytes = bits // 6
@@ -50,15 +56,16 @@ def numberToHytes(value, bits):
     hytes.reverse()
     return hytes
 
+
 def decodeNumber(token):
     match token[0]:
-        case '%':
+        case "%":
             # binary number
             number = int(token[1:], 2)
-        case '!':
+        case "!":
             # octal number
             number = int(token[1:], 8)
-        case '$':
+        case "$":
             # hexadecimal number
             number = int(token[1:], 16)
         case _:
@@ -66,17 +73,19 @@ def decodeNumber(token):
             number = int(token)
     return number
 
+
 def decodeValue(token):
     global labels
     if token in labels:
         return decodeValue(str(labels[token]))
     return decodeNumber(token)
 
+
 def wavesciify(string):
     hytes = []
     for char in string:
         hytes.append(wavescii.definitions[char])
-    hytes.append(0)     # terminate string
+    hytes.append(0)  # terminate string
     return hytes
 
 
@@ -89,13 +98,16 @@ def registerFutureLabel(labelName, romOffset, valueSize):
     futureLabel.labelName = labelName
     futureLabel.valueSize = valueSize
     futureLabels.append(futureLabel)
-    return 0        # will be masked later, return 0 for now
+    return 0  # will be masked later, return 0 for now
+
 
 def populateFutureLabels():
     global labels, futureLabels, rom
     for futureLabel in futureLabels:
         try:
-            value = numberToHytes(decodeValue(futureLabel.labelName), futureLabel.valueSize)
+            value = numberToHytes(
+                decodeValue(futureLabel.labelName), futureLabel.valueSize
+            )
         except:
             abortError(futureLabel.line, strings.EXPECTED_NUMBER_OR_LABEL)
         for i in range(len(value)):
@@ -117,6 +129,7 @@ def instruction_1hyte(opcode, tokens):
     hytes += numberToHytes(value, 6)
     return hytes
 
+
 def instruction_2hyte(opcode, tokens):
     global romOffset
     hytes = []
@@ -129,6 +142,7 @@ def instruction_2hyte(opcode, tokens):
     hytes += numberToHytes(value, 12)
     return hytes
 
+
 def instruction_register(opcode, tokens):
     hytes = []
     hytes.append(opcode)
@@ -138,6 +152,7 @@ def instruction_register(opcode, tokens):
         abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
     hytes.append(reg << 3)
     return hytes
+
 
 def instruction_2registers(opcode, tokens):
     hytes = []
@@ -150,6 +165,7 @@ def instruction_2registers(opcode, tokens):
     hytes.append(regx << 3 | regy)
     return hytes
 
+
 def instruction_regivalue(opcode, tokens):
     global romOffset
     hytes = []
@@ -159,7 +175,7 @@ def instruction_regivalue(opcode, tokens):
     except:
         abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
     try:
-        if tokens[2][0] == '#':
+        if tokens[2][0] == "#":
             immediate = True
             value = decodeValue(tokens[2][1:])
         else:
@@ -167,7 +183,7 @@ def instruction_regivalue(opcode, tokens):
             value = decodeValue(tokens[2])
     except:
         try:
-            if tokens[2][0] == '#':
+            if tokens[2][0] == "#":
                 immediate = True
                 registerFutureLabel(tokens[2][1:], romOffset + 1, 8)
             else:
@@ -178,8 +194,10 @@ def instruction_regivalue(opcode, tokens):
             abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
     hytes += numberToHytes(value, 8)
     hytes[1] |= reg << 3
-    if not immediate: hytes[1] |= 0b000100
+    if not immediate:
+        hytes[1] |= 0b000100
     return hytes
+
 
 def instruction_hybrid(opcodereg, opcodeval, tokens):
     tworeg = False
@@ -189,8 +207,11 @@ def instruction_hybrid(opcodereg, opcodeval, tokens):
     except:
         pass
 
-    if tworeg: return instruction_2registers(opcodereg, tokens)
-    else: return instruction_regivalue(opcodeval, tokens)
+    if tworeg:
+        return instruction_2registers(opcodereg, tokens)
+    else:
+        return instruction_regivalue(opcodeval, tokens)
+
 
 def instruction_reg2hyte(opcode, tokens):
     global romOffset
@@ -209,12 +230,14 @@ def instruction_reg2hyte(opcode, tokens):
     hytes += numberToHytes(value, 12)
     return hytes
 
+
 # directive handlers
 def directive_1value(tokens):
     try:
         return decodeValue(tokens[1])
     except:
         abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+
 
 def directive_listofvalues(tokens):
     values = []
@@ -225,46 +248,51 @@ def directive_listofvalues(tokens):
         abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
     return values
 
+
 def directive_string(line):
-    string = ''
+    string = ""
     startIndex = line.find('"') + 1
-    if startIndex == 0: abortError(lineCounter, strings.EXPECTED_STRING)
-    
+    if startIndex == 0:
+        abortError(lineCounter, strings.EXPECTED_STRING)
+
     terminated = False
     endIndex = len(line)
     currentPos = startIndex
     while currentPos < endIndex:
-        if line[currentPos] == '\\':
+        if line[currentPos] == "\\":
             currentPos += 1
             match line[currentPos]:
-                case '\\':
-                    string += '\\'
-                case '0':
-                    string += '\0'
-                case 'n':
-                    string += '\n'
+                case "\\":
+                    string += "\\"
+                case "0":
+                    string += "\0"
+                case "n":
+                    string += "\n"
                 case '"':
                     string += '"'
         elif line[currentPos] == '"':
             terminated = True
             break
-        else: string += line[currentPos]
+        else:
+            string += line[currentPos]
         currentPos += 1
-    if not terminated: abortError(lineCounter, strings.STRING_NOT_TERMINATED)
+    if not terminated:
+        abortError(lineCounter, strings.STRING_NOT_TERMINATED)
     return string
+
 
 # actual parsing
 def parse(fileNameIn):
     global labels, lineCounter, rom, romOffset
     try:
-        with open(fileNameIn, 'r') as file:
+        with open(fileNameIn, "r") as file:
             sourceFile = file.readlines()
     except:
         abortError(lineCounter, strings.FILE_NOT_FOUND)
 
     for line in sourceFile:
         lineCounter += 1
-        tokens = line.strip().split(' ')
+        tokens = line.strip().split(" ")
         bytesToAdd = []
 
         # filter empty tokens
@@ -273,7 +301,7 @@ def parse(fileNameIn):
         # handle comments
         tokensToKeep = len(tokens)
         for i in range(len(tokens)):
-            if tokens[i][0] == ';':
+            if tokens[i][0] == ";":
                 tokensToKeep = i
                 break
         tokensToRemove = len(tokens) - tokensToKeep
@@ -281,18 +309,20 @@ def parse(fileNameIn):
             tokens.pop()
 
         # handle empty lines
-        if len(tokens) == 0: continue
+        if len(tokens) == 0:
+            continue
 
         # handle labels
-        if tokens[0][-1] == ':' or (len(tokens) == 3 and tokens[1] == '='):
-            if tokens[0][-1] == ':':
+        if tokens[0][-1] == ":" or (len(tokens) == 3 and tokens[1] == "="):
+            if tokens[0][-1] == ":":
                 expectedTokens = 1
                 labelName = tokens[0][:-1]
                 labelValue = romOffset
-            elif tokens[1] == '=':
+            elif tokens[1] == "=":
                 expectedTokens = 3
                 labelName = tokens[0]
-                if len(tokens) < 3: abortError(lineCounter, strings.MISSING_LABEL_VALUE)
+                if len(tokens) < 3:
+                    abortError(lineCounter, strings.MISSING_LABEL_VALUE)
                 try:
                     labelValue = decodeValue(tokens[2])
                 except:
@@ -309,93 +339,90 @@ def parse(fileNameIn):
             labels[labelName] = labelValue
             continue
 
-
-
         # now, actual instructions.
         instruction = tokens[0].upper()
         match instruction:
-            case 'CALL':
+            case "CALL":
                 bytesToAdd += instruction_2hyte(0o00, tokens)
-            
-            case 'JUMP':
+
+            case "JUMP":
                 bytesToAdd += instruction_2hyte(0o01, tokens)
-            
-            case 'RJUMP':
+
+            case "RJUMP":
                 bytesToAdd += instruction_1hyte(0o02, tokens)
-            
-            case 'RETURN':
+
+            case "RETURN":
                 bytesToAdd.append(0o03)
 
-            case 'ADD':
+            case "ADD":
                 bytesToAdd += instruction_2registers(0o13, tokens)
 
-            case 'SUBTRACT':
+            case "SUBTRACT":
                 bytesToAdd += instruction_2registers(0o14, tokens)
 
-            case 'OR':
+            case "OR":
                 bytesToAdd += instruction_2registers(0o15, tokens)
 
-            case 'AND':
+            case "AND":
                 bytesToAdd += instruction_2registers(0o16, tokens)
 
-            case 'XOR':
+            case "XOR":
                 bytesToAdd += instruction_2registers(0o17, tokens)
 
-            case 'SHIFTL':
+            case "SHIFTL":
                 bytesToAdd += instruction_register(0o20, tokens)
 
-            case 'SHIFTR':
+            case "SHIFTR":
                 bytesToAdd += instruction_register(0o21, tokens)
 
-            case 'LOAD':
+            case "LOAD":
                 bytesToAdd += instruction_hybrid(0o12, 0o06, tokens)
 
-            case 'STORE':
+            case "STORE":
                 bytesToAdd += instruction_regivalue(0o07, tokens)
-            
-            case 'ILOAD':
+
+            case "ILOAD":
                 bytesToAdd += instruction_regivalue(0o22, tokens)
 
-            case 'ISTORE':
+            case "ISTORE":
                 bytesToAdd += instruction_regivalue(0o23, tokens)
 
-            case 'EQUAL':
+            case "EQUAL":
                 bytesToAdd += instruction_hybrid(0o10, 0o04, tokens)
 
-            case 'NOTEQUAL':
+            case "NOTEQUAL":
                 bytesToAdd += instruction_hybrid(0o11, 0o05, tokens)
 
-            case 'PLOAD':
+            case "PLOAD":
                 bytesToAdd += instruction_reg2hyte(0o4, tokens)
 
-            case 'PSTORE':
+            case "PSTORE":
                 bytesToAdd += instruction_reg2hyte(0o5, tokens)
 
-            case 'IPLOAD':
+            case "IPLOAD":
                 bytesToAdd += instruction_reg2hyte(0o6, tokens)
 
-            case 'IPSTORE':
+            case "IPSTORE":
                 bytesToAdd += instruction_reg2hyte(0o7, tokens)
 
             # compiler directives
-            case 'ORIGIN':
+            case "ORIGIN":
                 romOffset = directive_1value(tokens)
-            
-            case 'DATA':
+
+            case "DATA":
                 bytesToAdd = directive_listofvalues(tokens)
 
-            case 'STRING':
+            case "STRING":
                 try:
                     bytesToAdd = wavesciify(directive_string(line).upper())
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
 
-            case 'INCLUDE':
+            case "INCLUDE":
                 try:
                     parse(directive_string(line))
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
-
 
             case _:
                 abortError(lineCounter, strings.UNKNOWN_INSTRUCTION)
@@ -405,8 +432,6 @@ def parse(fileNameIn):
             romOffset += 1
             if romOffset >= constants.ROM_SIZE:
                 abortError(lineCounter, strings.OUT_OF_SPACE)
-    
+
     populateFutureLabels()
     return rom
-
-    
