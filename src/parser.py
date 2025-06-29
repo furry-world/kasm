@@ -325,7 +325,7 @@ def parse(fileNameIn):
                 bytesToAdd += instruction_registerwords(0b01011000, tokens, 2)
 
             case "LOAD":
-                bytesToAdd += instruction_immediateable(0b01101000, tokens, 1)
+                bytesToAdd += instruction_immediateable(0b01101000, tokens)
 
             case "STORE":
                 bytesToAdd += instruction_registerwords(0b01111000, tokens, 2)
