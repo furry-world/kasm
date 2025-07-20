@@ -75,11 +75,31 @@ def decodeNumber(token):
 
 
 def decodeValue(token):
-    global labels
-    if token in labels:
-        return decodeValue(str(labels[token]))
-    return decodeNumber(token)
+    global labels, lineCounter
 
+    label = token
+    index = -1
+    splitTokens = token.split('@')
+    if len(splitTokens) > 1:
+        label = splitTokens[0]
+        index = splitTokens[1]
+        try:
+            index = int(index)
+        except:
+            abortError(lineCounter, strings.INVALID_PREPROCESSOR_USAGE)
+    if label in labels:
+        value = decodeValue(str(labels[label]))
+    else:
+        value = decodeNumber(label)
+    if index >= 0:
+        return fetchNthWord(value, index)
+    return value
+
+def fetchNthWord(value, n):
+    words = numberToHytes(value, (n + 1) * 6)
+    if n < len(words):
+        return words[0]
+    return 0
 
 def wavesciify(string):
     hytes = []
@@ -323,10 +343,15 @@ def parse(fileNameIn):
                 labelName = tokens[0]
                 if len(tokens) < 3:
                     abortError(lineCounter, strings.MISSING_LABEL_VALUE)
+                labelValue = decodeValue(tokens[2])
                 try:
                     labelValue = decodeValue(tokens[2])
                 except:
                     abortError(lineCounter, strings.INVALID_LABEL_VALUE)
+
+            # prob hacky, fix pls
+            atIndex = labelName.find('@')
+            if atIndex >= 0: labelName = labelName[0:atIndex]
 
             if len(tokens) != expectedTokens:
                 abortError(lineCounter, strings.INVALID_LABEL_DEFINITION)
