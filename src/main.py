@@ -33,11 +33,11 @@ for arg in arguments:
         printUsage()
         sys.exit()
 
-    if arg.startswith("-o="):
+    elif arg.startswith("-o="):
         fileNameOut = arg[3:]
         continue
 
-    fileNameIn = arg
+    else: fileNameIn = arg
 
 if fileNameIn == "":
     printUsage()
