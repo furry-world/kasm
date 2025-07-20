@@ -35,7 +35,7 @@ for arg in arguments:
 
     if arg.startswith("-o="):
         fileNameOut = arg[3:]
-        break
+        continue
 
     fileNameIn = arg
 
