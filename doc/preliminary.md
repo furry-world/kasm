@@ -3,6 +3,7 @@ kemu specific directives:
 - `DATA x y z...` - literal hytes to put in program memory
 - `STRING "text"` - ASCII text converted to wavescii
 - `INCLUDE "path/to/file"` - yea
+- `INCLUDEBINARY "path/to/file"` - include file as raw bytes
 
 there are two types of labels:
 - `positional_label:` - the value becomes its offset in program memory

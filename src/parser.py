@@ -301,6 +301,20 @@ def directive_string(line):
     return string
 
 
+def directive_bininclude(fileNameIn):
+    try:
+        with open(fileNameIn, "rb") as file:
+            sourceFile = file.read()
+    except:
+        abortError(lineCounter, strings.FILE_NOT_FOUND)
+
+    bytesToAdd = []
+    for i in sourceFile:
+        bytesToAdd.append(int(i))
+
+    return bytesToAdd
+
+
 # actual parsing
 def parse(fileNameIn):
     global labels, lineCounter, rom, romOffset
@@ -435,17 +449,23 @@ def parse(fileNameIn):
                 romOffset = directive_1value(tokens)
 
             case "DATA":
-                bytesToAdd = directive_listofvalues(tokens)
+                bytesToAdd += directive_listofvalues(tokens)
 
             case "STRING":
                 try:
-                    bytesToAdd = wavesciify(directive_string(line).upper())
+                    bytesToAdd += wavesciify(directive_string(line).upper())
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
 
             case "INCLUDE":
                 try:
                     parse(directive_string(line))
+                except:
+                    abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
+
+            case "INCLUDEBINARY":
+                try:
+                    bytesToAdd += directive_bininclude(directive_string(line))
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
 
