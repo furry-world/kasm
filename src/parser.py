@@ -426,6 +426,12 @@ def parse(fileNameIn):
             case "ISTORE":
                 bytesToAdd += instruction_regivalue(0o23, tokens)
 
+            case "NPLOAD":
+                bytesToAdd += instruction_regivalue(0o24, tokens)
+
+            case "NPSTORE":
+                bytesToAdd += instruction_regivalue(0o25, tokens)
+
             case "EQUAL":
                 bytesToAdd += instruction_hybrid(0o10, 0o04, tokens)
 
