@@ -158,7 +158,7 @@ def instruction_immediateable(opcode, tokens):
     except:
         abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
 
-    if not immediate: opcode |= 0b00001000
+    if not immediate: opcode |= 0b00010000
 
     words.append(opcode)
     if immediate:
@@ -325,10 +325,10 @@ def parse(fileNameIn):
                 bytesToAdd += instruction_registerwords(0b01011000, tokens, 2)
 
             case "LOAD":
-                bytesToAdd += instruction_immediateable(0b01101000, tokens)
+                bytesToAdd += instruction_immediateable(0b01100000, tokens)
 
             case "STORE":
-                bytesToAdd += instruction_registerwords(0b01111000, tokens, 2)
+                bytesToAdd += instruction_registerwords(0b01101000, tokens, 2)
 
 
             case "ADD":
@@ -357,7 +357,7 @@ def parse(fileNameIn):
                 bytesToAdd += instruction_hybrid(0b11000000, 0b11100000, tokens)
 
             case "NOTEQUAL":
-                bytesToAdd += instruction_hybrid(0b11001000, 0b11110000, tokens)
+                bytesToAdd += instruction_hybrid(0b11001000, 0b11101000, tokens)
 
 
             # compiler directives
