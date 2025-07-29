@@ -70,7 +70,7 @@ def populateFutureLabels():
 
 # opcode signature handlers
 def instruction_words(opcode, tokens, numWords):
-    global romOffset
+    global lineCounter, romOffset
     words = []
     words.append(opcode)
     try:
@@ -82,7 +82,17 @@ def instruction_words(opcode, tokens, numWords):
     return words
 
 
+def instruction_bit(opcode, tokens):
+    global lineCounter
+    try:
+        opcode |= int(tokens[1]) % 2
+    except:
+        abortError(lineCounter, strings.EXPECTED_NUMBER_OR_LABEL)
+    return [opcode]
+
+
 def instruction_register(opcode, tokens):
+    global lineCounter
     try:
         reg = registerNameToID(tokens[1])
     except:
@@ -92,6 +102,7 @@ def instruction_register(opcode, tokens):
 
 
 def instruction_registerwords(opcode, tokens, numWords):
+    global lineCounter
     try:
         reg = registerNameToID(tokens[1])
     except:
@@ -102,6 +113,7 @@ def instruction_registerwords(opcode, tokens, numWords):
 
 
 def instruction_2registers(opcode, tokens):
+    global lineCounter
     words = []
     words.append(opcode)
     try:
@@ -114,6 +126,7 @@ def instruction_2registers(opcode, tokens):
 
 
 def instruction_flag(opcode, tokens):
+    global lineCounter
     try:
         value = utils.decodeValue(tokens[1], labels)
     except:
@@ -123,7 +136,7 @@ def instruction_flag(opcode, tokens):
 
 
 def instruction_immediateable(opcode, tokens):
-    global romOffset
+    global lineCounter, romOffset
     words = []
 
     try:
@@ -166,6 +179,7 @@ def instruction_immediateable(opcode, tokens):
 
 
 def instruction_hybrid(opcodereg, opcodeval, tokens):
+    global lineCounter
     tworeg = False
     try:
         registerNameToID(tokens[2])
@@ -180,6 +194,7 @@ def instruction_hybrid(opcodereg, opcodeval, tokens):
 
 # directive handlers
 def directive_1value(tokens):
+    global lineCounter
     try:
         return utils.decodeValue(tokens[1], labels)
     except:
@@ -187,6 +202,7 @@ def directive_1value(tokens):
 
 
 def directive_listofvalues(tokens):
+    global lineCounter
     values = []
     try:
         for i in tokens[1:]:
@@ -197,6 +213,7 @@ def directive_listofvalues(tokens):
 
 
 def directive_string(line):
+    global lineCounter
     string = ""
     startIndex = line.find('"') + 1
     if startIndex == 0:
@@ -229,6 +246,7 @@ def directive_string(line):
 
 
 def directive_bininclude(fileNameIn):
+    global lineCounter
     try:
         with open(fileNameIn, "rb") as file:
             sourceFile = file.read()
@@ -321,7 +339,7 @@ def parse(fileNameIn):
                 bytesToAdd += instruction_words(0b00000011, tokens, 1)
 
             case "INTERRUPT":
-                bytesToAdd += instruction_words(0b00001000, tokens, 1)
+                bytesToAdd += instruction_bit(0b00001000, tokens)
 
             case "POP":
                 bytesToAdd += instruction_register(0b00100000, tokens)
