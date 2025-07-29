@@ -1,3 +1,6 @@
+import strings
+import constants
+
 def numberToWords(value, bits, wordSize, isLittleEndian = True):
     numValuesInWord = 2**wordSize
     numFullWords = bits // wordSize
@@ -34,7 +37,39 @@ def decodeNumber(token):
             number = int(token)
     return number
 
+def splitWordSelectorToken(token):
+    index = -1
+    splitTokens = token.split('@')
+    if len(splitTokens) > 1:
+        label = splitTokens[0]
+        index = splitTokens[1]
+        try:
+            index = int(index)
+        except:
+            abortError(lineCounter, strings.INVALID_PREPROCESSOR_USAGE)
+
+    return splitTokens[0], index
+
 def decodeValue(token, labels):
-    if token in labels:
-        return decodeValue(str(labels[token]), labels)
-    return decodeNumber(token)
+    label, index = splitWordSelectorToken(token)
+
+    if label in labels:
+        value = decodeValue(str(labels[label]), labels)
+    else:
+        value = decodeNumber(label)
+    if index >= 0:
+        return fetchNthWord(value, index)
+    return value
+
+def fetchNthWord(value, n):
+    words = numberToWords(value, (n + 1) * 6, constants.WORD_SIZE)
+    if n < len(words):
+        return words[0]
+    return 0
+
+def wavesciify(string):
+    words = []
+    for char in string:
+        words.append(wavescii.definitions[char])
+    words.append(0)  # terminate string
+    return words

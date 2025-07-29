@@ -10,6 +10,7 @@ class FutureLabel:
     romOffset = -1
     labelName = ""
     valueSize = -1
+    wordOffset = 0
 
 
 # this is to handle labels across methods
@@ -21,7 +22,7 @@ lineCounter = 0
 rom = [constants.FILL_VALUE for x in range(constants.ROM_SIZE)]
 romOffset = 0
 
-wordSize = 8
+wordSize = constants.WORD_SIZE
 
 def abortError(line, message):
     print(strings.ERROR_ON_LINE + f" {line}: {message}")
@@ -39,13 +40,6 @@ def registerNameToID(name):
         return regid - ord("A")
     raise Exception("invalid register name")
 
-def wavesciify(string):
-    words = []
-    for char in string:
-        words.append(wavescii.definitions[char])
-    words.append(0)  # terminate string
-    return words
-
 
 def registerFutureLabel(labelName, romOffset, valueSize):
     global futureLabels
@@ -53,7 +47,7 @@ def registerFutureLabel(labelName, romOffset, valueSize):
     futureLabel = FutureLabel()
     futureLabel.line = lineCounter
     futureLabel.romOffset = romOffset
-    futureLabel.labelName = labelName
+    futureLabel.labelName, futureLabel.wordOffset = utils.splitWordSelectorToken(labelName)
     futureLabel.valueSize = valueSize
     futureLabels.append(futureLabel)
     return 0  # will be masked later, return 0 for now
@@ -64,7 +58,7 @@ def populateFutureLabels():
     for futureLabel in futureLabels:
         try:
             value = utils.numberToWords(
-                utils.decodeValue(futureLabel.labelName, labels), futureLabel.valueSize, wordSize
+                utils.decodeValue(futureLabel.labelName + f'@{futureLabel.wordOffset}', labels), futureLabel.valueSize, wordSize
             )
         except:
             abortError(futureLabel.line, strings.EXPECTED_NUMBER_OR_LABEL)
@@ -138,6 +132,8 @@ def instruction_immediateable(opcode, tokens):
         abortError(lineCounter, strings.EXPECTED_VALID_REGISTER)
 
     opcode |= reg
+
+    value = 0
 
     try:
         if tokens[2][0] == "#":
@@ -232,6 +228,20 @@ def directive_string(line):
     return string
 
 
+def directive_bininclude(fileNameIn):
+    try:
+        with open(fileNameIn, "rb") as file:
+            sourceFile = file.read()
+    except:
+        abortError(lineCounter, strings.FILE_NOT_FOUND)
+
+    bytesToAdd = []
+    for i in sourceFile:
+        bytesToAdd.append(int(i))
+
+    return bytesToAdd
+
+
 # actual parsing
 def parse(fileNameIn):
     global labels, lineCounter, rom, romOffset
@@ -274,10 +284,15 @@ def parse(fileNameIn):
                 labelName = tokens[0]
                 if len(tokens) < 3:
                     abortError(lineCounter, strings.MISSING_LABEL_VALUE)
+                labelValue = utils.decodeValue(tokens[2], labels)
                 try:
                     labelValue = utils.decodeValue(tokens[2], labels)
                 except:
                     abortError(lineCounter, strings.INVALID_LABEL_VALUE)
+
+            # prob hacky, fix pls
+            atIndex = labelName.find('@')
+            if atIndex >= 0: labelName = labelName[0:atIndex]
 
             if len(tokens) != expectedTokens:
                 abortError(lineCounter, strings.INVALID_LABEL_DEFINITION)
@@ -353,6 +368,12 @@ def parse(fileNameIn):
                 bytesToAdd += instruction_register(0b10011000, tokens)
 
 
+            case "NPLOAD":
+                bytesToAdd += instruction_regivalue(0o24, tokens)
+
+            case "NPSTORE":
+                bytesToAdd += instruction_regivalue(0o25, tokens)
+
             case "EQUAL":
                 bytesToAdd += instruction_hybrid(0b11000000, 0b11100000, tokens)
 
@@ -365,17 +386,23 @@ def parse(fileNameIn):
                 romOffset = directive_1value(tokens)
 
             case "DATA":
-                bytesToAdd = directive_listofvalues(tokens)
+                bytesToAdd += directive_listofvalues(tokens)
 
             case "STRING":
                 try:
-                    bytesToAdd = wavesciify(directive_string(line).upper())
+                    bytesToAdd += wavesciify(directive_string(line).upper())
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
 
             case "INCLUDE":
                 try:
                     parse(directive_string(line))
+                except:
+                    abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
+
+            case "INCLUDEBINARY":
+                try:
+                    bytesToAdd += directive_bininclude(directive_string(line))
                 except:
                     abortError(lineCounter, strings.STRING_CONTAINS_ILLEGAL_CHARS)
 
