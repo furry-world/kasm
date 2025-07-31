@@ -12,44 +12,35 @@
 
 import sys
 import os.path
+import argparse
 
 import parser
 
+if __name__ == "__main__":
+    argParser = argparse.ArgumentParser(
+        prog='kasm-k8',
+        description='kasm-k8 v0.4 (alpha) - Kepler K8 Assembler',
+    )
 
-def printUsage():
-    print("kasm-k8 v0.3 (alpha)")
-    print(f"usage: {sys.argv[0]} <INPUT FILE> [SWITCHES]")
-    print()
-    print("valid switches:")
-    print("   -h          print help")
-    print("   -o=<FILE>   specify output file name")
+    argParser.add_argument('filename', help='assembly source file to compile')
+    argParser.add_argument('-o', '--output', help='set output binary filename')
 
+    arguments = argParser.parse_args(sys.argv[1:])
 
-fileNameIn = ""
-fileNameOut = ""
-arguments = sys.argv[1:]
-for arg in arguments:
-    if arg.startswith("-h"):
+    fileNameIn = arguments.filename
+    fileNameOut = arguments.output
+
+    if fileNameIn is None:
         printUsage()
         sys.exit()
 
-    elif arg.startswith("-o="):
-        fileNameOut = arg[3:]
-        continue
-
-    else: fileNameIn = arg
-
-if fileNameIn == "":
-    printUsage()
-    sys.exit()
-
-if fileNameOut == "":
-    fileNameOut = os.path.basename(fileNameIn).split(".")[0] + ".rom"
+    if fileNameOut is None:
+        fileNameOut = os.path.basename(fileNameIn).split(".")[0] + ".rom"
 
 
-rom = parser.parse(fileNameIn)
+    rom = parser.parse(fileNameIn)
 
 
-with open(fileNameOut, "wb") as file:
-    for byte in rom:
-        file.write(byte.to_bytes(1))
+    with open(fileNameOut, "wb") as file:
+        for byte in rom:
+            file.write(byte.to_bytes(1))

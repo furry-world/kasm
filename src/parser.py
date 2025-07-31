@@ -10,7 +10,7 @@ class FutureLabel:
     romOffset = -1
     labelName = ""
     valueSize = -1
-    wordOffset = 0
+    wordOffset = -1
 
 
 # this is to handle labels across methods
@@ -387,10 +387,10 @@ def parse(fileNameIn):
 
 
             case "NPLOAD":
-                bytesToAdd += instruction_regivalue(0o24, tokens)
+                bytesToAdd += instruction_registerwords(0b00010000, tokens, 2)
 
             case "NPSTORE":
-                bytesToAdd += instruction_regivalue(0o25, tokens)
+                bytesToAdd += instruction_registerwords(0b00011000, tokens, 2)
 
             case "EQUAL":
                 bytesToAdd += instruction_hybrid(0b11000000, 0b11100000, tokens)
