@@ -62,7 +62,8 @@ def decodeValue(token, labels):
     return value
 
 def fetchNthWord(value, n):
-    words = numberToWords(value, (n + 1) * 6, constants.WORD_SIZE)
+    words = numberToWords(value, (n + 1) * constants.WORD_SIZE, constants.WORD_SIZE)
+    print(words)
     if n < len(words):
         return words[0]
     return 0
