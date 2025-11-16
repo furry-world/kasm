@@ -1,4 +1,6 @@
-# strings for english
+// strings for english
+
+/*
 
 ERROR_ON_LINE = "ERROR on line"
 COMPILATION_ABORTED = "Compilation aborted."
@@ -22,3 +24,5 @@ INVALID_PREPROCESSOR_USAGE = "invalid usage of a preprocessor command"
 UNKNOWN_INSTRUCTION = "unknown instruction"
 OUT_OF_SPACE = "ran out of ROM space"
 FILE_NOT_FOUND = "file not found"
+
+*/
