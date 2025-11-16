@@ -1,5 +1,5 @@
 files	= src/*.cpp src/*.hpp
-opts	=
+opts	= -std=c++23
 
 kasm: $(files)
-	g++ -o kasm -std=c++23 $(files) $(opts)
+	g++ -o kasm $(files) $(opts)
