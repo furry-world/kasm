@@ -1,5 +1,18 @@
 // strings for english
 
+// #define const_string inline constexpr std::string_view
+
+#define PROJECT_NAME          "kasm"
+#define PROJECT_VERSION       "v0.1-a"
+#define PROJECT_AUTHOR        "qRea"
+#define PROJECT_YEAR          "2025"
+#define PROJECT_DESCRIPTION   "Assembler for Kepler K6 and K8 programs"
+
+#define PROJECT_DESCRIPTION_LONG   PROJECT_NAME " " PROJECT_VERSION " by " PROJECT_AUTHOR ", " PROJECT_YEAR "\n" PROJECT_DESCRIPTION
+
+#define STRINGS_ERROR_PREFIX "ERROR: "
+
+
 /*
 
 ERROR_ON_LINE = "ERROR on line"
