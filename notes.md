@@ -22,7 +22,7 @@
     - passed to the instructions during parsing
     - catch error
     - defaults to one syntax, is overridden by the other (or is an abstract class)
-    
+
 # debug library
 - debug prints (including function name)
 - print stack trace (if possible)

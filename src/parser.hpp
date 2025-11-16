@@ -5,9 +5,11 @@
  */
 
 #include <cstdint>
-#include <vector>
 #include <filesystem>
+#include <vector>
 
 namespace parser {
-    std::vector<std::uint8_t> parse(std::filesystem::path input_file_path);
+
+std::vector<uint8_t> parse(std::filesystem::path input_file_path);
+
 }
