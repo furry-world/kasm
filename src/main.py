@@ -35,7 +35,7 @@ if __name__ == "__main__":
         sys.exit()
 
     if fileNameOut is None:
-        fileNameOut = os.path.basename(fileNameIn).split(".")[0] + ".rom"
+        fileNameOut = os.path.splitext(fileNameIn)[0] + ".rom"
 
 
     rom = parser.parse(fileNameIn)
