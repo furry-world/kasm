@@ -1,8 +1,8 @@
 /**
- * instruction abstract class
+ * instruction intermediary class
  *
- * An abstract class that defines what an instruction class needs to contain.
- * This is so we can support multiple architectures.
+ * An intermediary class that defines what an instruction class needs to
+ * contain. This is so we can support multiple architectures.
  *
  */
 
