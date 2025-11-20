@@ -4,3 +4,5 @@
  * Used to assemble K8 code.
  */
 
+#include "../instruction.hpp"
+

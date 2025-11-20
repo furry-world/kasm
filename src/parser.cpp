@@ -5,6 +5,7 @@
 
 #include "pesticide.hpp"
 
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <fstream>
@@ -12,15 +13,20 @@
 
 namespace parser {
 
-std::vector<std::string> read_file(std::filesystem::path input_file_path) {
-    std::ifstream input_file(input_file_path);
+using std::exception;
+using std::ifstream;
+using std::string;
+using std::vector;
+
+vector<string> read_file(std::filesystem::path input_file_path) {
+    ifstream input_file(input_file_path);
     if (!input_file.is_open()) {
         throw std::invalid_argument ("Error while opening file");
     }
 
-    std::vector<std::string> file_contents;
+    vector<string> file_contents;
 
-    std::string line;
+    string line;
     while (getline(input_file, line)) {
         file_contents.push_back(line);
     }
@@ -29,22 +35,22 @@ std::vector<std::string> read_file(std::filesystem::path input_file_path) {
     return file_contents;
 }
 
-std::vector<uint8_t> parse(std::filesystem::path input_file_path) {
-    std::vector<std::string> file_lines;
+vector<uint8_t> parse(std::filesystem::path input_file_path) {
+    vector<string> file_lines;
     try {
         file_lines = read_file(input_file_path);
-    } catch (std::exception e) {
+    } catch (exception e) {
         std::cerr << STRINGS_ERROR_PREFIX "Unable to open file "
                   << input_file_path << std::endl;
     }
 
-    std::vector<uint8_t> bytes;
+    vector<uint8_t> bytes;
 
     for (int i = 0; i < file_lines.size(); ++i) {
         auto line = file_lines[i];
-        std::string::size_type line_end_pos = line.find(COMMENT_INITIATOR);
+        string::size_type line_end_pos = line.find(COMMENT_INITIATOR);
 
-        if (line_end_pos == std::string::npos) {
+        if (line_end_pos == string::npos) {
             line_end_pos = line.size();
         }
 

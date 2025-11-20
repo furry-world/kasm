@@ -7,7 +7,12 @@
 #include <string>
 #include <vector>
 
+using std::string;
+using std::vector;
+
 namespace utils {
-    std::string trim(std::string input);
-    std::vector<std::string> tokenize(std::string input);
-}
+
+string trim(string input);
+vector<string> tokenize(string input);
+
+} // namespace utils

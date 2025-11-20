@@ -17,8 +17,8 @@
 #ifdef PESTICIDE_ENABLED
 
 // necessary includes
-#include <iostream>
-#include <chrono>
+#include <iostream> // IWYU pragma: keep (used by macros)
+#include <chrono>   // IWYU pragma: keep (used by macros)
 // #include <stacktrace>
 
 

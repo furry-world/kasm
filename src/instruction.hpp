@@ -12,27 +12,33 @@
 #include <vector>
 
 namespace instruction {
+
+using std::function;
+using std::string;
+using std::vector;
+
 class Instruction {
+
   private:
-    std::string mnemonic;
-    std::function<std::vector<uint8_t>(std::vector<std::string>)> assemble_function;
+    string mnemonic;
+    function<vector<uint8_t>(vector<string>)> assemble_function;
 
   public:
     bool operator==(const Instruction& other) const {
         return mnemonic == other.mnemonic;
     }
 
-    std::string get_mnemonic() {
+    string get_mnemonic() {
         return mnemonic;
     };
 
-    std::vector<uint8_t> assemble(std::vector<std::string> tokens) {
+    vector<uint8_t> assemble(vector<string> tokens) {
         return assemble_function(tokens);
     };
 
     Instruction(
-        std::string _mnemonic,
-        std::function<std::vector<uint8_t>(std::vector<std::string>)> _assemble) {
+        string _mnemonic,
+        function<vector<uint8_t>(vector<string>)> _assemble) {
             mnemonic = _mnemonic;
             assemble_function = _assemble;
         }
