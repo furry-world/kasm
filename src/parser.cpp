@@ -1,7 +1,10 @@
 #include "parser.hpp"
+#include "instruction.hpp"
 #include "strings.hpp"
 #include "constants.hpp"
 #include "utils.hpp"
+
+#include "arch/k8.hpp"
 
 #include "pesticide.hpp"
 
@@ -45,8 +48,9 @@ vector<uint8_t> parse(std::filesystem::path input_file_path) {
     }
 
     vector<uint8_t> bytes;
+    auto isa_holder = K8_instruction();
 
-    for (int i = 0; i < file_lines.size(); ++i) {
+    for (uint32_t i = 0; i < file_lines.size(); ++i) {
         auto line = file_lines[i];
         string::size_type line_end_pos = line.find(COMMENT_INITIATOR);
 
@@ -58,15 +62,10 @@ vector<uint8_t> parse(std::filesystem::path input_file_path) {
         line = utils::trim(line);
 
         auto tokens = utils::tokenize(line);
-        for (int j = 0; j < tokens.size(); ++j) {
-            pesticide_print(tokens[j]);
+        auto bytes_to_add = isa_holder.assemble(tokens);
+        for (uint16_t j = 0; j < bytes_to_add.size(); ++j) {
+            bytes.push_back(bytes_to_add[j]);
         }
-
-
-        for (int j = 0; j < line.size(); ++j) {
-            bytes.push_back(line[j]);
-        }
-        bytes.push_back('\n');
     }
 
     return bytes;

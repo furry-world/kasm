@@ -1,3 +1,4 @@
+#pragma once
 // strings for english
 
 // #define const_string inline constexpr std::string_view

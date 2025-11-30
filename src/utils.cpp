@@ -1,4 +1,5 @@
-#include "label.hpp"
+#include "utils.hpp"
+
 #include "pesticide.hpp"
 
 #include <algorithm>
@@ -47,6 +48,7 @@ vector<string> tokenize(string input) {
             token = "";
         }
     }
+    if (!token.empty()) { tokens.push_back(token); }
 
     return tokens;
 }
@@ -83,10 +85,20 @@ uint64_t decode_value(string token, vector<Label> &labels) {
     }
 
     if (!found) {
-        throw std::invalid_argument("unknown value");
+        try {
+            value = decode_number(token);
+        } catch (std::exception e) {
+            throw std::invalid_argument("unknown value");
+        }
+
     }
 
     return value;
+}
+
+uint64_t decode_number(string token) {
+    //TODO: implement number base handling manually
+    return (uint64_t) std::stoull(token.c_str(), nullptr, 0);
 }
 
 } // namespace utils

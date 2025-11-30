@@ -1,3 +1,4 @@
+#pragma once
 /*
 definitions = {
     '\0': 0o00,

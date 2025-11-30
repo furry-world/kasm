@@ -1,3 +1,4 @@
+#pragma once
 /**
  * instruction intermediary class
  *
@@ -19,29 +20,11 @@ using std::vector;
 
 class Instruction {
 
-  private:
-    string mnemonic;
-    function<vector<uint8_t>(vector<string>)> assemble_function;
-
   public:
-    bool operator==(const Instruction& other) const {
-        return mnemonic == other.mnemonic;
-    }
 
-    string get_mnemonic() {
-        return mnemonic;
-    };
+    vector<uint8_t> assemble(vector<string> tokens);
 
-    vector<uint8_t> assemble(vector<string> tokens) {
-        return assemble_function(tokens);
-    };
-
-    Instruction(
-        string _mnemonic,
-        function<vector<uint8_t>(vector<string>)> _assemble) {
-            mnemonic = _mnemonic;
-            assemble_function = _assemble;
-        }
+    Instruction() {}
 };
 
 } // namespace instruction
